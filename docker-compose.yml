@@ -26,7 +26,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: my-secret-pw
     ports:
-      - "8080:8080"
+      - "8000:8080"
     depends_on:
       mysqldb:
         condition: service_healthy
