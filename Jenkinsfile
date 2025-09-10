@@ -15,16 +15,18 @@ pipeline {
  
         stage('Trivy Scan') {
             steps {
-                sh 'trivy fs  --severity HIGH,CRITICAL -f html -o trivy-report.html .'
+                sh "trivy fs  --severity HIGH,CRITICAL -f html -o trivy-report.html ."
+                archiveArtifacts artifacts: 'trivy-report.html'
             }
         }
         stage('SonarQube Scan') {
                  steps {
                      withSonarQubeEnv('SonarQubeServer') {
-                    sh ''' ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                    sh """ ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
                     -Dsonar.projectName=FoodFrenzy \
-                     -Dsonar.projectKey=FoodFrenzy
-                     '''
+                     -Dsonar.projectKey=FoodFrenzy \
+                     -Dsonar.sources=.
+                     """
                      }
                  }
             }
@@ -32,10 +34,11 @@ pipeline {
                  steps {
                   echo "OWASP Dependency Check"
                      dependencyCheck(
-                     additionalArguments: '--scan ./',
+                     additionalArguments: '--scan ./ --format HTML ',
                      odcInstallation: 'owasp',
                     )
                      dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                     archiveArtifacts artifacts: 'dependency-check-report.html'
                       }
                  }
              stage('Quality Gate') {
@@ -59,15 +62,15 @@ pipeline {
                  withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', 
                  passwordVariable: 'DOCKERHUB_PASSWORD', 
                  usernameVariable: 'DOCKERHUB_USERNAME')]) {
-              sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
-              sh 'docker push ${DOCKER_IMAGE}'
+              sh "docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD"
+              sh "docker push ${DOCKER_IMAGE}"
             }
           }
          }
         stage('Deploy with Docker Compose') {
             steps {
                 echo 'Deploying Application + MySQL using Docker Compose'
-                sh 'docker-compose pull && docker-compose up -d'
+                sh "docker-compose pull && docker-compose up -d"
             }
         }
     }
