@@ -18,7 +18,7 @@ services:
       retries: 10
   
   foodfrenzy-app:
-    build: .
+    image: lokendradhote64/foodfrenzy:latest
     container_name: foodfrenzy-app
     restart: on-failure
     environment:
