@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'lokendradhote64/FoodFrenzy:latest'
-        SONARQUBE_SERVER = tool("SonarQubeServer")
+        SONARQUBE_SERVER = ("SonarQubeServer")
     }
 
     stages {
@@ -12,20 +12,13 @@ pipeline {
                 git url: 'https://github.com/Lokendram10/FoodFrenzy-docker', branch: 'master'
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                  sh "${SONARQUBE_SERVER}/bin/sonar-scanner   -DsonarProjectName=FoodFrenzy -Dsonar.projectKey=FoodFrenzy "
-
-                }
-            }
-        }
+ 
         stage('Trivy Scan') {
             steps {
                 sh 'trivy fs  --severity HIGH,CRITICAL -f html -o trivy-report.html .'
             }
         }
-        stage('Owasp Dependency Check'){
+        stage('SonarQube Scan') {
                  steps {
                      withSonarQubeEnv('SonarQubeServer') {
                     sh ''' ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
@@ -35,6 +28,16 @@ pipeline {
                      }
                  }
             }
+        stage('Owasp Dependency Check'){
+                 steps {
+                  echo "OWASP Dependency Check"
+                     dependencyCheck(
+                     additionalArguments: '--scan ./',
+                     odcInstallation: 'owasp',
+                    )
+                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                      }
+                 }
              stage('Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
