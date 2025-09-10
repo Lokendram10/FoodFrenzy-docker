@@ -61,15 +61,12 @@ pipeline {
             }
           }
          }
-        stage('Docker Compose Up') {
+        stage('Deploy with Docker Compose') {
             steps {
-                sh 'docker-compose up -d --build'
+                echo 'Deploying Application + MySQL using Docker Compose'
+                sh 'docker-compose pull && docker-compose up -d'
             }
         }
     }
-    post {
-        always {
-            sh 'docker-compose '
-        }
-    }
+   
 }
