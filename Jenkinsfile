@@ -33,10 +33,12 @@ pipeline {
     }
 }
 
-     stage('Build Java Project') {
+  stage('Build Java Project') {
     steps {
-        def mvnHome = tool 'maven'  // <-- exact name you configured
+           script {
+            def mvnHome = tool 'maven'  // exact name from Jenkins tool config
             sh "${mvnHome}/bin/mvn clean package -DskipTests"
+        }
     }
 }
 
