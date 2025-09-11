@@ -35,7 +35,8 @@ pipeline {
 
      stage('Build Java Project') {
     steps {
-        sh 'mvn clean package -DskipTests'
+        def mvnHome = tool 'maven'  // <-- exact name you configured
+            sh "${mvnHome}/bin/mvn clean package -DskipTests"
     }
 }
 
