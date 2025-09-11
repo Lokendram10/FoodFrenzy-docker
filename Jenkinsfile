@@ -37,7 +37,7 @@ stage('SonarQube Scan') {
     steps {
         withSonarQubeEnv('SonarQubeServer') {
             script {
-                def scannerHome = tool 'Sonar Cube Scanner'
+                def scannerHome = tool 'SonarQubeScanner'
                 sh """
                 ${scannerHome}/bin/sonar-scanner \
                   -Dsonar.projectKey=FoodFrenzy \
