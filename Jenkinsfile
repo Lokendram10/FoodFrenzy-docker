@@ -33,22 +33,28 @@ pipeline {
     }
 }
 
+     stage('Build Java Project') {
+    steps {
+        sh 'mvn clean package -DskipTests'
+    }
+}
+
 stage('SonarQube Scan') {
     steps {
         withSonarQubeEnv('SonarQubeServer') {
             script {
-                def scannerHome = tool 'SonarQubeScanner'
+                def scannerHome = tool 'Sonar Cube Scanner'
                 sh """
                 ${scannerHome}/bin/sonar-scanner \
                   -Dsonar.projectKey=FoodFrenzy \
                   -Dsonar.projectName=FoodFrenzy \
-                  -Dsonar.sources=.
+                  -Dsonar.sources=. \
+                  -Dsonar.java.binaries=target/classes
                 """
             }
         }
     }
 }
-
         stage('Owasp Dependency Check'){
                  steps {
                   echo "OWASP Dependency Check"
