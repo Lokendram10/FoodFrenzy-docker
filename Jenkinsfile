@@ -36,7 +36,7 @@ pipeline {
         stage('SonarQube Scan') {
                  steps {
                      withSonarQubeEnv('SonarQubeServer') {
-                    sh """ ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                    sh """ ${scannerHome}/bin/sonar-scanner \
                     -Dsonar.projectName=FoodFrenzy \
                      -Dsonar.projectKey=FoodFrenzy \
                      -Dsonar.sources=.
