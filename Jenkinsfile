@@ -1,106 +1,117 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'JDK17'          // Jenkins JDK tool name (Java 17)
+        maven 'mavan'        // Jenkins Maven tool name
+    }
+
     environment {
         DOCKER_IMAGE = 'lokendradhote64/FoodFrenzy:latest'
-        SONARQUBE_SERVER = ("SonarQubeServer")
+        SONARQUBE_SERVER = 'Sonar Cube Scanner'   // exact name of SonarQube Scanner tool
     }
 
     stages {
+
+        // 1️⃣ Clone the repository
         stage('Clone') {
             steps {
                 git url: 'https://github.com/Lokendram10/FoodFrenzy-docker', branch: 'master'
             }
         }
- 
-      stage('Trivy Scan') {
-    steps {
-        // Human-readable scan (console + artifact)
-        sh """
-        trivy fs --severity HIGH,CRITICAL \
-        --format table \
-        -o trivy-report.txt .
-        """
 
-        // Machine-readable scan (JSON for tools)
-        sh """
-        trivy fs --severity HIGH,CRITICAL \
-        --format json \
-        -o trivy-report.json .
-        """
-
-        archiveArtifacts artifacts: 'trivy-report.*'
-    }
-}
-
-  stage('Build Java Project') {
-    steps {
-           script {
-            def mvnHome = tool 'maven'  // exact name from Jenkins tool config
-            sh "${mvnHome}/bin/mvn clean package -DskipTests"
-        }
-    }
-}
-
-stage('SonarQube Scan') {
-    steps {
-        withSonarQubeEnv('SonarQubeServer') {
-            script {
-                def scannerHome = tool 'Sonar Cube Scanner'
-                sh """
-                ${scannerHome}/bin/sonar-scanner \
-                  -Dsonar.projectKey=FoodFrenzy \
-                  -Dsonar.projectName=FoodFrenzy \
-                  -Dsonar.sources=. \
-                  -Dsonar.java.binaries=target/classes
-                """
+        // 2️⃣ Build Java Project
+        stage('Build Java Project') {
+            steps {
+                sh 'mvn clean package -DskipTests'
             }
         }
-    }
-}
-        stage('Owasp Dependency Check'){
-                 steps {
-                  echo "OWASP Dependency Check"
-                     dependencyCheck(
-                     additionalArguments: '--scan ./ --format HTML ',
-                     odcInstallation: 'owasp',
-                    )
-                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                     archiveArtifacts artifacts: 'dependency-check-report.html'
-                      }
-                 }
-             stage('Quality Gate') {
+
+        // 3️⃣ Trivy Scan
+        stage('Trivy Scan') {
+            steps {
+                sh 'trivy fs --severity HIGH,CRITICAL --format table -o trivy-report.txt .'
+                sh 'trivy fs --severity HIGH,CRITICAL --format json -o trivy-report.json .'
+                archiveArtifacts artifacts: 'trivy-report.*'
+            }
+        }
+
+        // 4️⃣ OWASP Dependency Check
+        stage('OWASP Dependency Check') {
+            steps {
+                echo "Running OWASP Dependency Check"
+                dependencyCheck(
+                    additionalArguments: '--scan ./',
+                    odcInstallation: 'owasp'
+                )
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                archiveArtifacts artifacts: 'dependency-check-report.html'
+            }
+        }
+
+        // 5️⃣ SonarQube Scan
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('Sonar Cube Scanner') {
+                    script {
+                        def scannerHome = tool 'Sonar Cube Scanner'
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=FoodFrenzy \
+                        -Dsonar.projectName=FoodFrenzy \
+                        -Dsonar.sources=. \
+                        -Dsonar.java.binaries=target/classes
+                        """
+                    }
+                }
+            }
+        }
+
+        // 6️⃣ SonarQube Quality Gate
+        stage('Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
-        
 
+        // 7️⃣ Build Docker Image
         stage('Build Docker Image') {
-              steps {
-               echo 'Building Docker Image'
-                sh "docker build -t ${DOCKER_IMAGE} ."
-               }
-      }  
-        stage('Push to  Docker HUb'){
-           steps{
-             echo'Pushing Image to Docker Hub'
-                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', 
-                 passwordVariable: 'DOCKERHUB_PASSWORD', 
-                 usernameVariable: 'DOCKERHUB_USERNAME')]) {
-              sh "docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD"
-              sh "docker push ${DOCKER_IMAGE}"
-            }
-          }
-         }
-        stage('Deploy with Docker Compose') {
             steps {
-                echo 'Deploying Application + MySQL using Docker Compose'
-                sh "docker-compose pull && docker-compose up -d"
+                echo 'Building Docker Image'
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
+
+        // 8️⃣ Push to Docker Hub
+        stage('Push to Docker Hub') {
+            steps {
+                echo 'Pushing Docker Image'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                 usernameVariable: 'DOCKERHUB_USERNAME',
+                                                 passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                    sh "docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD"
+                    sh "docker push ${DOCKER_IMAGE}"
+                }
+            }
+        }
+
+        // 9️⃣ Deploy using Docker Compose
+        stage('Deploy') {
+            steps {
+                echo 'Deploying Application + MySQL using Docker Compose'
+                sh 'docker-compose pull && docker-compose up -d'
+            }
+        }
+
+    } // stages
+
+    post {
+        always {
+            echo 'Pipeline finished. Archiving artifacts.'
+            archiveArtifacts artifacts: '**/*.html, **/*.json'
+        }
     }
-   
+
 }
