@@ -33,17 +33,22 @@ pipeline {
     }
 }
 
-        stage('SonarQube Scan') {
-                 steps {
-                     withSonarQubeEnv('SonarQubeServer') {
-                    sh """ ${scannerHome}/bin/sonar-scanner \
-                    -Dsonar.projectName=FoodFrenzy \
-                     -Dsonar.projectKey=FoodFrenzy \
-                     -Dsonar.sources=.
-                     """
-                     }
-                 }
+stage('SonarQube Scan') {
+    steps {
+        withSonarQubeEnv('SonarQubeServer') {
+            script {
+                def scannerHome = tool 'Sonar Cube Scanner'
+                sh """
+                ${scannerHome}/bin/sonar-scanner \
+                  -Dsonar.projectKey=FoodFrenzy \
+                  -Dsonar.projectName=FoodFrenzy \
+                  -Dsonar.sources=.
+                """
             }
+        }
+    }
+}
+
         stage('Owasp Dependency Check'){
                  steps {
                   echo "OWASP Dependency Check"
