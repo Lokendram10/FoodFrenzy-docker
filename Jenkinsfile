@@ -13,12 +13,26 @@ pipeline {
             }
         }
  
-        stage('Trivy Scan') {
-            steps {
-                sh "trivy fs  --severity HIGH,CRITICAL -f html -o trivy-report.html ."
-                archiveArtifacts artifacts: 'trivy-report.html'
-            }
-        }
+      stage('Trivy Scan') {
+    steps {
+        // Human-readable scan (console + artifact)
+        sh """
+        trivy fs --severity HIGH,CRITICAL \
+        --format table \
+        -o trivy-report.txt .
+        """
+
+        // Machine-readable scan (JSON for tools)
+        sh """
+        trivy fs --severity HIGH,CRITICAL \
+        --format json \
+        -o trivy-report.json .
+        """
+
+        archiveArtifacts artifacts: 'trivy-report.*'
+    }
+}
+
         stage('SonarQube Scan') {
                  steps {
                      withSonarQubeEnv('SonarQubeServer') {
