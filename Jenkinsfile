@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_IMAGE = 'lokendradhote64/FoodFrenzy:latest'
+        DOCKER_IMAGE = 'lokendradhote64/foodfrenzy:latest'
         SONARQUBE_SERVER = 'SonarqubeScanner'   // must match Jenkins SonarQube server name
     }
 
