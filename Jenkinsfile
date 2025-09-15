@@ -45,17 +45,18 @@ pipeline {
         }
 
         // 5️⃣ OWASP Dependency Check
-        stage('OWASP Dependency Check') {
-            steps {
-                echo "Running OWASP Dependency Check"
-                dependencyCheck(
-                    additionalArguments: '--scan ./',
-                    odcInstallation: 'owasp'
-                )
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                archiveArtifacts artifacts: 'dependency-check-report.html'
-            }
-        }
+  stage('OWASP Dependency Check') {
+    steps {
+        echo "Running OWASP Dependency Check"
+        dependencyCheck(
+            additionalArguments: '--scan ./ --format HTML',
+            odcInstallation: 'owasp'
+        )
+        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+        archiveArtifacts artifacts: 'dependency-check-report.html, **/dependency-check-report.xml'
+    }
+}
+
 
         // 6️⃣ SonarQube Scan
         stage('SonarQube Scan') {
