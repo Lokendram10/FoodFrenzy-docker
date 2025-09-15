@@ -2,17 +2,17 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK21'          // Jenkins JDK tool name (Java 17)
-        maven 'maven'        // Jenkins Maven tool name
+        jdk 'JDK21'          // Make sure this matches Jenkins Global Tool name
+        maven 'maven'        // Your Maven 3.9.11 installation name
     }
 
     environment {
         DOCKER_IMAGE = 'lokendradhote64/FoodFrenzy:latest'
-        SONARQUBE_SERVER = 'SonarqubeScanner'   // exact name of SonarQube Scanner tool
+        SONARQUBE_SERVER = 'SonarqubeScanner'   // must match Jenkins SonarQube server name
     }
 
     stages {
-
+        
         // 1️⃣ Clone the repository
         stage('Clone') {
             steps {
@@ -20,14 +20,22 @@ pipeline {
             }
         }
 
-        // 2️⃣ Build Java Project
+        // 2️⃣ Verify Tools
+        stage('Verify Tools') {
+            steps {
+                sh 'java -version'
+                sh 'mvn -v'
+            }
+        }
+
+        // 3️⃣ Build Java Project
         stage('Build Java Project') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        // 3️⃣ Trivy Scan
+        // 4️⃣ Trivy Scan
         stage('Trivy Scan') {
             steps {
                 sh 'trivy fs --severity HIGH,CRITICAL --format table -o trivy-report.txt .'
@@ -36,7 +44,7 @@ pipeline {
             }
         }
 
-        // 4️⃣ OWASP Dependency Check
+        // 5️⃣ OWASP Dependency Check
         stage('OWASP Dependency Check') {
             steps {
                 echo "Running OWASP Dependency Check"
@@ -49,12 +57,12 @@ pipeline {
             }
         }
 
-        // 5️⃣ SonarQube Scan
+        // 6️⃣ SonarQube Scan
         stage('SonarQube Scan') {
             steps {
-                withSonarQubeEnv('SonarqubeScanner') {
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
                     script {
-                        def scannerHome = tool 'Sonar Cube Scanner'
+                        def scannerHome = tool 'SonarQubeScanner'   // must match Jenkins tool name
                         sh """
                         ${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=FoodFrenzy \
@@ -67,7 +75,7 @@ pipeline {
             }
         }
 
-        // 6️⃣ SonarQube Quality Gate
+        // 7️⃣ SonarQube Quality Gate
         stage('Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
@@ -76,7 +84,7 @@ pipeline {
             }
         }
 
-        // 7️⃣ Build Docker Image
+        // 8️⃣ Build Docker Image
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker Image'
@@ -84,7 +92,7 @@ pipeline {
             }
         }
 
-        // 8️⃣ Push to Docker Hub
+        // 9️⃣ Push to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 echo 'Pushing Docker Image'
@@ -97,14 +105,13 @@ pipeline {
             }
         }
 
-        // 9️⃣ Deploy using Docker Compose
+        // 🔟 Deploy using Docker Compose
         stage('Deploy') {
             steps {
                 echo 'Deploying Application + MySQL using Docker Compose'
                 sh 'docker-compose pull && docker-compose up -d'
             }
         }
-
     } // stages
 
     post {
@@ -113,5 +120,4 @@ pipeline {
             archiveArtifacts artifacts: '**/*.html, **/*.json'
         }
     }
-
 }
