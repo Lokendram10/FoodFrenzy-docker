@@ -12,15 +12,15 @@ pipeline {
     }
 
     stages {
-        
-        // 1️⃣ Clone the repository
+
+        // Clone the repository
         stage('Clone') {
             steps {
                 git url: 'https://github.com/Lokendram10/FoodFrenzy-docker', branch: 'master'
             }
         }
 
-        // 2️⃣ Verify Tools
+        //  Verify Tools
         stage('Verify Tools') {
             steps {
                 sh 'java -version'
@@ -28,14 +28,14 @@ pipeline {
             }
         }
 
-        // 3️⃣ Build Java Project
+        //  Build Java Project
         stage('Build Java Project') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        // 4️⃣ Trivy Scan
+        // Trivy Scan
         stage('Trivy Scan') {
             steps {
                 sh 'trivy fs --severity HIGH,CRITICAL --format table -o trivy-report.txt .'
@@ -44,7 +44,7 @@ pipeline {
             }
         }
 
-        // 5️⃣ OWASP Dependency Check
+        //  OWASP Dependency Check
   stage('OWASP Dependency Check') {
     steps {
         echo "Running OWASP Dependency Check"
@@ -58,7 +58,7 @@ pipeline {
 }
 
 
-        // 6️⃣ SonarQube Scan
+        //  SonarQube Scan
         stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
@@ -76,7 +76,7 @@ pipeline {
             }
         }
 
-        // 7️⃣ SonarQube Quality Gate
+        //  SonarQube Quality Gate
         stage('Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
@@ -85,7 +85,7 @@ pipeline {
             }
         }
 
-        // 8️⃣ Build Docker Image
+        // Build Docker Image
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker Image'
@@ -93,7 +93,7 @@ pipeline {
             }
         }
 
-        // 9️⃣ Push to Docker Hub
+        // Push to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 echo 'Pushing Docker Image'
@@ -106,14 +106,15 @@ pipeline {
             }
         }
 
-        // 🔟 Deploy using Docker Compose
+        //  Deploy using Docker Compose
         stage('Deploy') {
             steps {
                 echo 'Deploying Application + MySQL using Docker Compose'
-                sh 'docker-compose pull && docker-compose up -d'
+                sh 'docker compose pull && docker compose up -d'
+
             }
         }
-    } // stages
+    } 
 
     post {
         always {
