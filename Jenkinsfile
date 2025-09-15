@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK17'          // Jenkins JDK tool name (Java 17)
+        jdk 'JDK21'          // Jenkins JDK tool name (Java 17)
         maven 'maven'        // Jenkins Maven tool name
     }
 
     environment {
         DOCKER_IMAGE = 'lokendradhote64/FoodFrenzy:latest'
-        SONARQUBE_SERVER = 'Sonar Cube Scanner'   // exact name of SonarQube Scanner tool
+        SONARQUBE_SERVER = 'SonarqubeScanner'   // exact name of SonarQube Scanner tool
     }
 
     stages {
@@ -52,7 +52,7 @@ pipeline {
         // 5️⃣ SonarQube Scan
         stage('SonarQube Scan') {
             steps {
-                withSonarQubeEnv('Sonar Cube Scanner') {
+                withSonarQubeEnv('SonarqubeScanner') {
                     script {
                         def scannerHome = tool 'Sonar Cube Scanner'
                         sh """
