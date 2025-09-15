@@ -63,7 +63,7 @@ pipeline {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
                     script {
-                        def scannerHome = tool 'SonarQubeScanner'   // must match Jenkins tool name
+                        def scannerHome = tool 'SonarqubeScanner'   // must match Jenkins tool name
                         sh """
                         ${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=FoodFrenzy \
