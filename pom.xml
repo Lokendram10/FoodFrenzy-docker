@@ -18,11 +18,12 @@
     <name>FoodFrenzy</name>
     <description>FoodFrenzy using Spring Boot and Thymeleaf</description>
 
-    <properties>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-    </properties>
+  <properties>
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+</properties>
+
 
     <dependencies>
         <dependency>
@@ -71,15 +72,15 @@
     <build>
         <plugins>
             <!-- ✅ Compiler plugin for JDK 21 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.12.1</version>
-                <configuration>
-                    <release>21</release>
-                </configuration>
-            </plugin>
 
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.12.1</version>
+    <configuration>
+        <release>17</release>
+    </configuration>
+</plugin>
             <!-- ✅ Spring Boot plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
